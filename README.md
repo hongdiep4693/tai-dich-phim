@@ -14,7 +14,7 @@ Dán nội dung chia sẻ Douyin -> tự tách link -> tải video -> nhận d�
 | `douyin.py` | lấy link chuẩn và tải video (trang chia sẻ, dự phòng yt-dlp) |
 | `transcribe.py` | nhận dạng lời thoại bằng Groq Whisper |
 | `translate.py` | tạo ngữ cảnh (cốt truyện, nhân vật, xưng hô) và dịch |
-| `tts.py` | Edge TTS và ghép track lồng tiếng |
+| `tts.py` | các engine TTS (Edge, gTTS, Sherpa-ONNX offline), tải model, ghép track lồng tiếng |
 | `ffmpeg_utils.py` | tách âm thanh, đổi wav, render (phụ đề, pitch/tempo, xóa metadata) |
 | `groq_api.py` | gọi Groq, xoay vòng nhiều key, kiểm tra key, tìm model |
 | `common.py` | hằng số, ngôn ngữ/giọng, hàm dùng chung |
@@ -47,3 +47,11 @@ thử từng model Groq và chỉ giữ model dùng được trong hai ô model.
 - Mỗi video có thư mục riêng: `segments_zh.json`, `context.json`, `sub.srt`, `dub.wav`, `final_*.mp4`.
 - `settings.json` chứa API key của bạn và đã được chặn trong `.gitignore`.
 - Chỉ dùng với video bạn có quyền sử dụng/đăng lại.
+
+## Engine TTS (tab "Giọng đọc")
+
+- **Edge TTS**: online, nhiều giọng, chỉnh được tốc độ và cao độ.
+- **gTTS (Google)**: online, 1 giọng theo ngôn ngữ, không chỉnh giọng/tốc độ.
+- **Sherpa-ONNX**: offline trên CPU. Bấm "Tải model tiếng Việt (vais1000)" để tự tải model
+  `vits-piper-vi_VN-vais1000-medium` về thư mục `models/` cạnh app (hoặc tự giải nén model Sherpa khác rồi
+  chọn thư mục). Bản .exe có Sherpa sẽ nặng hơn do kèm ONNX Runtime.

@@ -11,6 +11,14 @@ SETTINGS_FILE = BASE / "settings.json"
 FFMPEG = shutil.which("ffmpeg") or str(BASE / "ffmpeg.exe")
 NOWIN = 0x08000000 if os.name == "nt" else 0  # ẩn cửa sổ CMD khi gọi ffmpeg
 SR = 24000  # sample rate của track lồng tiếng
+MODELS_DIR = BASE / "models"  # nơi tải model TTS offline
+
+# Các engine TTS: khóa -> tên hiển thị
+ENGINES = {
+    "edge": "Edge TTS (online, nhiều giọng)",
+    "gtts": "gTTS Google (online, 1 giọng)",
+    "sherpa": "Sherpa-ONNX (offline)",
+}
 
 # Tên hiển thị -> (tên ngôn ngữ gửi cho AI, danh sách giọng Edge TTS)
 LANGS = {

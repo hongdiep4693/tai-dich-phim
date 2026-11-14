@@ -1,4 +1,6 @@
 yt-dlp
 edge-tts
+gTTS
+sherpa-onnx
 requests
 numpy

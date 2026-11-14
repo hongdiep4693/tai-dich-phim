@@ -56,9 +56,9 @@ def pipeline(c, log, step):
     write_srt(tr, work / "sub.srt")
 
     step("Lồng tiếng Edge TTS", 70)
-    synthesize(tr, c["voice"], c["tts_rate"], c["tts_pitch"], work, log)
+    synthesize(tr, c, work, log)
     dub = work / "dub.wav"
-    compose_dub(tr, work, dub, c["max_speedup"])
+    compose_dub(tr, work, dub, c["max_speedup"], log)
 
     step("Render video cuối", 85)
     final = work / f"final_{vid}.mp4"

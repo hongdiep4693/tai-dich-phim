@@ -7,9 +7,10 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, messagebox, scrolledtext, ttk
 
-from common import LANGS, SETTINGS_FILE
+from common import ENGINES, LANGS, MODELS_DIR, SETTINGS_FILE
 from groq_api import check_keys, find_working_models
 from pipeline import pipeline
+from tts import SHERPA_DEFAULT_MODEL, download_sherpa_model
 
 
 class App(tk.Tk):
@@ -63,10 +64,26 @@ class App(tk.Tk):
         cb.pack(side="left"); cb.bind("<<ComboboxSelected>>", self.on_lang)
 
         # --- TTS
-        t = ttk.LabelFrame(tab2, text="Giọng đọc (Edge TTS)")
+        t = ttk.LabelFrame(tab2, text="Giọng đọc")
         t.pack(fill="x", **pad)
         r = ttk.Frame(t); r.pack(fill="x", padx=6, pady=2)
-        ttk.Label(r, text="Giọng", width=22).pack(side="left")
+        ttk.Label(r, text="Engine TTS", width=22).pack(side="left")
+        self.vars["tts_engine"] = tk.StringVar(value=ENGINES.get(s.get("tts_engine"), ENGINES["edge"]))
+        ttk.Combobox(r, textvariable=self.vars["tts_engine"], values=list(ENGINES.values()),
+                     state="readonly", width=34).pack(side="left")
+        ttk.Label(t, foreground="gray", wraplength=780, justify="left",
+                  text="Edge: chọn giọng bên dưới. gTTS: chỉ 1 giọng theo ngôn ngữ, bỏ qua tốc độ/cao độ TTS. "
+                       "Sherpa: chạy offline, cần thư mục model (bấm Tải model)."
+                  ).pack(anchor="w", padx=6)
+        self.field(t, "sherpa_dir", "Thư mục model Sherpa",
+                   s.get("sherpa_dir", str(MODELS_DIR / SHERPA_DEFAULT_MODEL)))
+        r = ttk.Frame(t); r.pack(fill="x", padx=6, pady=2)
+        ttk.Button(r, text="Chọn thư mục…", command=self.pick_model_dir).pack(side="left")
+        self.btn_dl = ttk.Button(r, text="Tải model tiếng Việt (vais1000)", command=self.dl_model)
+        self.btn_dl.pack(side="left", padx=6)
+        self.field(t, "sherpa_sid", "Speaker ID (Sherpa)", str(s.get("sherpa_sid", "0")))
+        r = ttk.Frame(t); r.pack(fill="x", padx=6, pady=2)
+        ttk.Label(r, text="Giọng Edge TTS", width=22).pack(side="left")
         self.vars["voice"] = tk.StringVar(value=s.get("voice", "vi-VN-HoaiMyNeural"))
         self.voice_cb = ttk.Combobox(r, textvariable=self.vars["voice"], width=28,
                                      values=LANGS[self.vars["lang"].get()][1])
@@ -144,6 +161,26 @@ class App(tk.Tk):
         self.voice_cb["values"] = voices
         self.vars["voice"].set(voices[0])
 
+    def pick_model_dir(self):
+        p = filedialog.askdirectory(title="Chọn thư mục model Sherpa đã giải nén")
+        if p:
+            self.vars["sherpa_dir"].set(p)
+
+    def dl_model(self):
+        self.btn_dl.config(state="disabled")
+        log = lambda m: self.q.put(("log", m))
+
+        def job():
+            try:
+                p = download_sherpa_model(MODELS_DIR, log)
+                self.q.put(("setvar", ("sherpa_dir", str(p))))
+                log(f"Model sẵn sàng: {p}. Chọn engine 'Sherpa-ONNX (offline)' để dùng.")
+            except Exception as e:
+                log(f"LỖI tải model: {e}")
+            finally:
+                self.q.put(("btn_dl", None))
+        threading.Thread(target=job, daemon=True).start()
+
     def pick_video(self):
         p = filedialog.askopenfilename(filetypes=[("Video", "*.mp4 *.mov *.mkv *.webm")])
         if p:
@@ -205,6 +242,7 @@ class App(tk.Tk):
             elif typ is float:
                 val = round(float(val), 3)
             c[k] = val
+        c["tts_engine"] = next((k for k, v in ENGINES.items() if v == c["tts_engine"]), "edge")
         c["api_key"] = self.keys_txt.get("1.0", "end").strip()
         c["text"] = self.txt.get("1.0", "end").strip()
         c["local_video"] = self.local_video
@@ -244,6 +282,10 @@ class App(tk.Tk):
                     self.btn.config(state="normal")
                     if messagebox.askyesno("Xong", f"{data}\n\nMở thư mục chứa file?") and os.name == "nt":
                         os.startfile(Path(data).parent)
+                elif kind == "setvar":
+                    self.vars[data[0]].set(data[1])
+                elif kind == "btn_dl":
+                    self.btn_dl.config(state="normal")
                 elif kind == "buttons":
                     self.btn_keys.config(state="normal")
                     self.btn_models.config(state="normal")
