@@ -10,7 +10,8 @@ Dán nội dung chia sẻ Douyin -> tự tách link -> tải video -> nhận d�
 |---|---|
 | `main.py` | điểm vào, chỉ mở giao diện |
 | `ui.py` | giao diện Tkinter, nút Kiểm tra key / Tìm model |
-| `pipeline.py` | tải video (yt-dlp) và chạy tuần tự các bước |
+| `pipeline.py` | chạy tuần tự các bước |
+| `douyin.py` | lấy link chuẩn và tải video (trang chia sẻ, dự phòng yt-dlp) |
 | `transcribe.py` | nhận dạng lời thoại bằng Groq Whisper |
 | `translate.py` | tạo ngữ cảnh (cốt truyện, nhân vật, xưng hô) và dịch |
 | `tts.py` | Edge TTS và ghép track lồng tiếng |

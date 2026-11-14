@@ -1,49 +1,16 @@
 """Chạy toàn bộ quy trình: tải -> nhận dạng -> ngữ cảnh -> dịch -> TTS -> render."""
 import json
-import os
-import re
 import shutil
 import time
 from pathlib import Path
 
-import requests
-import yt_dlp
-
-from common import FFMPEG, LANGS, extract_url, write_srt
+from common import LANGS, extract_url, write_srt
+from douyin import download_video, resolve_douyin
 from ffmpeg_utils import extract_audio, render
 from groq_api import KeyPool
 from transcribe import transcribe
 from translate import build_context, translate_all
 from tts import compose_dub, synthesize
-
-
-def resolve_douyin(url):
-    """Mở link rút gọn v.douyin.com, trả về (link video chuẩn, id video)."""
-    ua = ("Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) "
-          "AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148")
-    r = requests.get(url, headers={"User-Agent": ua}, allow_redirects=True, timeout=20)
-    m = re.search(r"/(?:video|note)/(\d+)", r.url)
-    return (f"https://www.douyin.com/video/{m.group(1)}", m.group(1)) if m else (r.url, "video")
-
-
-def download_video(url, work, c):
-    opts = {"outtmpl": str(work / "video.%(ext)s"), "format": "bv*+ba/b",
-            "merge_output_format": "mp4", "quiet": True, "no_warnings": True,
-            "noplaylist": True, "overwrites": True}
-    if FFMPEG and os.path.isabs(FFMPEG):
-        opts["ffmpeg_location"] = FFMPEG
-    if c["cookies"]:
-        opts["cookiefile"] = c["cookies"]
-    elif c["browser"] != "none":
-        opts["cookiesfrombrowser"] = (c["browser"],)
-    try:
-        with yt_dlp.YoutubeDL(opts) as y:
-            y.download([url])
-    except Exception as e:
-        raise RuntimeError(
-            f"Tải video thất bại: {e}\nThử: chọn cookies.txt / trình duyệt đã đăng nhập Douyin, "
-            "build lại để cập nhật yt-dlp, hoặc dùng nút 'Chọn video có sẵn'.")
-    return next(work.glob("video.*"))
 
 
 def pipeline(c, log, step):
@@ -68,7 +35,7 @@ def pipeline(c, log, step):
         work = outroot / vid
         work.mkdir(parents=True, exist_ok=True)
         step("Tải video", 10)
-        video = download_video(url, work, c)
+        video = download_video(url, vid, work, c, log)
     log(f"Video: {video}")
 
     step("Trích âm thanh + nhận dạng", 25)
