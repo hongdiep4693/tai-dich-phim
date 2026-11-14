@@ -1,0 +1,50 @@
+name: Build Windows EXE
+
+on:
+  workflow_dispatch:        # bấm tay trong tab Actions
+  push:
+    tags: ["v*"]            # đẩy tag v1.0.0 sẽ tự build + tạo Release
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pyinstaller
+
+      - name: Build exe
+        run: pyinstaller --onefile --noconsole --name DouyinDubber --collect-all yt_dlp --collect-all edge_tts main.py
+
+      - name: Add ffmpeg next to the exe
+        shell: pwsh
+        run: |
+          Invoke-WebRequest https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip -OutFile ffmpeg.zip
+          Expand-Archive ffmpeg.zip -DestinationPath ffmpeg
+          Copy-Item (Get-ChildItem ffmpeg -Recurse -Filter ffmpeg.exe | Select-Object -First 1).FullName dist\
+          Copy-Item (Get-ChildItem ffmpeg -Recurse -Filter ffprobe.exe | Select-Object -First 1).FullName dist\
+
+      - name: Zip
+        shell: pwsh
+        run: Compress-Archive -Path dist\* -DestinationPath DouyinDubber-win64.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DouyinDubber-win64
+          path: DouyinDubber-win64.zip
+
+      - name: Publish release (chỉ khi đẩy tag)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: DouyinDubber-win64.zip
