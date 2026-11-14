@@ -1,0 +1,6 @@
+settings.json
+cookies.txt
+dist/
+build/
+*.spec
+__pycache__/
