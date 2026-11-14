@@ -16,15 +16,24 @@ class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Douyin Dubber")
-        self.geometry("860x860")
+        self.geometry("880x720")
+        self.minsize(760, 560)
         self.q = queue.Queue()
         self.vars = {}
         self.local_video = ""
         s = self.load()
         pad = {"padx": 8, "pady": 3}
 
+        # Chia thành 3 tab để cửa sổ không bị quá dài; nút BẮT ĐẦU + log luôn hiện ở dưới
+        nb = ttk.Notebook(self)
+        nb.pack(fill="x", padx=8, pady=4)
+        tab1, tab2, tab3 = (ttk.Frame(nb) for _ in range(3))
+        nb.add(tab1, text="  Nguồn & Groq  ")
+        nb.add(tab2, text="  Giọng đọc  ")
+        nb.add(tab3, text="  Video & thư mục  ")
+
         # --- nguồn
-        f = ttk.LabelFrame(self, text="Nguồn")
+        f = ttk.LabelFrame(tab1, text="Nguồn")
         f.pack(fill="x", **pad)
         ttk.Label(f, text="Dán nội dung chia sẻ Douyin:").pack(anchor="w", padx=6)
         self.txt = tk.Text(f, height=4, wrap="word")
@@ -34,7 +43,7 @@ class App(tk.Tk):
         self.lv = ttk.Label(row, text="(không dùng)"); self.lv.pack(side="left", padx=8)
 
         # --- Groq
-        g = ttk.LabelFrame(self, text="Groq & dịch")
+        g = ttk.LabelFrame(tab1, text="Groq & dịch")
         g.pack(fill="x", **pad)
         ttk.Label(g, text="Groq API keys (mỗi dòng 1 key, dùng xoay vòng từ trên xuống):").pack(anchor="w", padx=6)
         self.keys_txt = tk.Text(g, height=4, wrap="none")
@@ -54,7 +63,7 @@ class App(tk.Tk):
         cb.pack(side="left"); cb.bind("<<ComboboxSelected>>", self.on_lang)
 
         # --- TTS
-        t = ttk.LabelFrame(self, text="Giọng đọc (Edge TTS)")
+        t = ttk.LabelFrame(tab2, text="Giọng đọc (Edge TTS)")
         t.pack(fill="x", **pad)
         r = ttk.Frame(t); r.pack(fill="x", padx=6, pady=2)
         ttk.Label(r, text="Giọng", width=22).pack(side="left")
@@ -68,7 +77,7 @@ class App(tk.Tk):
         self.scale(t, "orig_vol", "Âm lượng tiếng gốc (0 = tắt)", 0.0, 1.0, s.get("orig_vol", 0.0), float)
 
         # --- video đầu ra
-        v = ttk.LabelFrame(self, text="Video đầu ra")
+        v = ttk.LabelFrame(tab3, text="Video đầu ra")
         v.pack(fill="x", **pad)
         self.check(v, "burn", "Burn phụ đề đã dịch", s.get("burn", True))
         self.field(v, "font", "Font phụ đề", s.get("font", "Arial"))
@@ -79,7 +88,7 @@ class App(tk.Tk):
         self.scale(v, "tempo", "Tempo video+audio (1.0 = giữ nguyên)", 0.8, 1.25, s.get("tempo", 1.0), float)
 
         # --- thư mục / cookies
-        d = ttk.LabelFrame(self, text="Tải về / thư mục")
+        d = ttk.LabelFrame(tab3, text="Tải về / thư mục")
         d.pack(fill="x", **pad)
         self.field(d, "outdir", "Thư mục lưu", s.get("outdir", str(Path.home() / "DouyinDubber")))
         self.field(d, "cookies", "cookies.txt (tuỳ chọn)", s.get("cookies", ""))
@@ -93,7 +102,7 @@ class App(tk.Tk):
         self.btn.pack(pady=6)
         self.pb = ttk.Progressbar(self, maximum=100); self.pb.pack(fill="x", padx=8)
         self.lbl = ttk.Label(self, text="Sẵn sàng"); self.lbl.pack(anchor="w", padx=8)
-        self.logbox = scrolledtext.ScrolledText(self, height=10, state="disabled")
+        self.logbox = scrolledtext.ScrolledText(self, height=8, state="disabled")
         self.logbox.pack(fill="both", expand=True, **pad)
         self.after(100, self.poll)
 
