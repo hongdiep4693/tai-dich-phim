@@ -56,7 +56,7 @@ def pipeline(c, log, step):
     write_srt(tr, work / "sub.srt")
 
     step("Lồng tiếng Edge TTS", 70)
-    synthesize(tr, c["voice"], c["tts_rate"], c["tts_pitch"], work)
+    synthesize(tr, c["voice"], c["tts_rate"], c["tts_pitch"], work, log)
     dub = work / "dub.wav"
     compose_dub(tr, work, dub, c["max_speedup"])
 
