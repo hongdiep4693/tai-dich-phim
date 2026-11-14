@@ -24,7 +24,7 @@ jobs:
         run: pip install -r requirements.txt pyinstaller
 
       - name: Build exe
-        run: pyinstaller --onefile --noconsole --name DouyinDubber --collect-all yt_dlp --collect-all edge_tts main.py
+        run: pyinstaller --onefile --noconsole --name DouyinDubber --collect-all yt_dlp --collect-all edge_tts --collect-all gtts --collect-all sherpa_onnx main.py
 
       - name: Add ffmpeg next to the exe
         shell: pwsh
